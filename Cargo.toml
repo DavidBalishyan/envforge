@@ -1,0 +1,14 @@
+[package]
+name = "envforge"
+version = "0.1.0"
+edition = "2021"
+description = "A CLI tool for creating and managing reproducible development environments from YAML configuration files"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+dirs = "5"

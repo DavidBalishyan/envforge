@@ -1,0 +1,14 @@
+name: python-dev
+
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_REQUIRE_VIRTUALENV: "true"
+
+setup:
+  - python3 -m venv .venv
+  - echo "Python development environment ready"

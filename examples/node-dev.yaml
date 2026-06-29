@@ -1,0 +1,12 @@
+name: node-dev
+
+packages:
+  - nodejs
+  - npm
+
+env:
+  NODE_ENV: development
+
+setup:
+  - npm init -y 2>/dev/null || true
+  - echo "Node.js development environment ready"

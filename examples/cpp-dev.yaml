@@ -1,0 +1,17 @@
+name: cpp-dev
+
+packages:
+  - gcc
+  - cmake
+  - gdb
+  - make
+
+env:
+  CC: gcc
+  CXX: g++
+  CFLAGS: -O2 -Wall
+  CXXFLAGS: -O2 -Wall
+
+setup:
+  - mkdir -p build
+  - echo "C++ development environment ready"
