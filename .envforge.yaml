@@ -1,0 +1,12 @@
+name: envforge-rust-dev
+
+packages:
+  - rustc
+  - cargo
+
+env:
+  RUST_BACKTRACE: "1"
+  CARGO_INCREMENTAL: "1"
+
+setup:
+  - echo "Setup is done!"
