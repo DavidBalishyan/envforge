@@ -1,4 +1,4 @@
-# Walkthrough
+# Usage walkthrough
 
 This guide walks through real envforge usage from start to finish.
 
