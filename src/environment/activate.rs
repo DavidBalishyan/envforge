@@ -25,14 +25,22 @@ pub fn activate_environment(
     }
 }
 
-fn spawn_subshell(config: &ProfileConfig, _executor: &ShellExecutor, installed_packages: &[String]) -> Result<()> {
+fn spawn_subshell(
+    config: &ProfileConfig,
+    _executor: &ShellExecutor,
+    installed_packages: &[String],
+) -> Result<()> {
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string());
     let shell_name = std::path::Path::new(&shell)
         .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("bash");
 
-    log::info!("spawning {} subshell for profile '{}'", shell_name, config.name);
+    log::info!(
+        "spawning {} subshell for profile '{}'",
+        shell_name,
+        config.name
+    );
 
     let env_exports = build_env_exports(&config.env);
 
@@ -62,10 +70,7 @@ fn spawn_subshell(config: &ProfileConfig, _executor: &ShellExecutor, installed_p
 
     let shell_invoke = match shell_name {
         "bash" => {
-            let content = format!(
-                "source ~/.bashrc 2>/dev/null\nPS1=\"{}$PS1\"\n",
-                ps1_prefix
-            );
+            let content = format!("source ~/.bashrc 2>/dev/null\nPS1=\"{}$PS1\"\n", ps1_prefix);
             std::fs::write(&rc_path, &content)
                 .map_err(|e| anyhow::anyhow!("failed to write bash rc: {}", e))?;
             extra_cleanup = format!("rm -f {}", rc_path);
@@ -75,10 +80,7 @@ fn spawn_subshell(config: &ProfileConfig, _executor: &ShellExecutor, installed_p
             let zdotdir = format!("{}_zd", rc_path);
             std::fs::create_dir_all(&zdotdir)
                 .map_err(|e| anyhow::anyhow!("failed to create zdotdir: {}", e))?;
-            let content = format!(
-                "source ~/.zshrc 2>/dev/null\nPS1=\"{}$PS1\"\n",
-                ps1_prefix
-            );
+            let content = format!("source ~/.zshrc 2>/dev/null\nPS1=\"{}$PS1\"\n", ps1_prefix);
             std::fs::write(format!("{}/.zshrc", zdotdir), &content)
                 .map_err(|e| anyhow::anyhow!("failed to write zsh rc: {}", e))?;
             extra_cleanup = format!("rm -rf {}", zdotdir);
@@ -89,7 +91,7 @@ fn spawn_subshell(config: &ProfileConfig, _executor: &ShellExecutor, installed_p
         }
     };
 
-    // Build cleanup trap — runs when the subshell exits
+    // Build cleanup trap runs when the subshell exits
     // Only removes packages that envforge actually installed (not pre-existing ones)
     let cleanup_trap = if installed_packages.is_empty() && extra_cleanup.is_empty() {
         String::new()
@@ -104,7 +106,10 @@ fn spawn_subshell(config: &ProfileConfig, _executor: &ShellExecutor, installed_p
                 let cmd = match pm.name() {
                     "apt" => format!("sudo apt-get remove -y {}", installed_packages.join(" ")),
                     "pacman" => {
-                        format!("sudo pacman -Rs --noconfirm {}", installed_packages.join(" "))
+                        format!(
+                            "sudo pacman -Rs --noconfirm {}",
+                            installed_packages.join(" ")
+                        )
                     }
                     "brew" => format!("brew remove {}", installed_packages.join(" ")),
                     _ => String::new(),

@@ -1,8 +1,11 @@
 use clap::{Parser, Subcommand};
 
+pub const VERSION: &str = env!("ENVFORGE_VERSION");
+
 #[derive(Parser)]
 #[command(name = "envforge")]
 #[command(about = "Create and manage reproducible development environments from YAML configs", long_about = None)]
+#[command(version = VERSION)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

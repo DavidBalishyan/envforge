@@ -1,3 +1,4 @@
+#[allow(unused)]
 pub trait PackageManager {
     fn install(&self, packages: &[String]) -> Vec<Result<(), String>>;
     fn remove(&self, packages: &[String]) -> Vec<Result<(), String>>;

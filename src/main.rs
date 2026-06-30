@@ -212,6 +212,7 @@ fn cmd_remove(profile: &str) -> Result<()> {
 
 fn cmd_doctor() -> Result<()> {
     println!("envforge doctor - system diagnostics");
+    println!("  version: {}", cli::commands::VERSION);
     println!();
 
     let config_dir = config::profiles_dir();
