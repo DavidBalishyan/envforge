@@ -2,27 +2,6 @@
 
 This document explains how envforge is built and how to extend it.
 
-## Project layout
-
-```
-src/
-  main.rs                 -- entry point, CLI dispatch, command implementations
-  cli/
-    commands.rs           -- clap argument definitions
-  config/
-    loader.rs             -- YAML parsing, profile storage in ~/.envforge/
-  installer/
-    trait.rs              -- PackageManager trait definition
-    mod.rs                -- OS detection and backend selection
-    apt.rs                -- apt-get backend
-    pacman.rs             -- pacman backend
-    brew.rs               -- brew backend
-  executor/
-    shell.rs              -- runs shell commands via sh -c, captures output
-  environment/
-    activate.rs           -- subshell spawning, env var exporting
-```
-
 ## How it works start to finish
 
 When you run `envforge enter <name>`:
@@ -38,12 +17,13 @@ When you run `envforge enter <name>`:
 ```rust
 pub trait PackageManager {
     fn install(&self, packages: &[String]) -> Vec<Result<(), String>>;
+    fn remove(&self, packages: &[String]) -> Vec<Result<(), String>>;
     fn name(&self) -> &'static str;
     fn is_available() -> bool where Self: Sized;
 }
 ```
 
-Each backend implements this trait. `is_available()` checks if the package manager binary exists on the system using `which`. `install()` runs the appropriate install commands and returns one result per package.
+Each backend implements this trait. `is_available()` checks if the package manager binary exists on the system using `which`. `install()` and `remove()` run the appropriate install/remove commands and return one result per package. The `remove()` method is invoked via an EXIT trap when the subshell exits.
 
 Adding a new backend (e.g. Docker, Nix):
 - Create a new file in `src/installer/`
@@ -58,11 +38,13 @@ Two modes:
 
 **Subshell (default)**: builds a single shell string like:
 ```
-export KEY=VALUE; export PS1="(envforge:name)$PS1"; setup_cmd1; setup_cmd2; exec /bin/bash
+export KEY=VALUE; trap 'sudo apt-get remove -y pkg1 pkg2' EXIT; setup_cmd1; /bin/bash --rcfile /tmp/envforge_rc
 ```
 
-Then runs `sh -c "<string>"`. The `exec` replaces sh with the user's shell.
-This keeps all env changes scoped -- when you exit, nothing leaks.
+The shell string is passed to `sh -c`. An EXIT trap removes packages when the
+shell exits. PS1 is set via a temporary rc file that sources `~/.bashrc` then
+prepends `(envforge:name) `. This keeps all env changes scoped - when you
+exit, packages are removed and nothing leaks.
 
 **Export**: simply prints `export KEY=VALUE` lines to stdout. The user can
 `eval "$(envforge enter --export <name>)"` to apply them. Setup commands are
@@ -97,21 +79,21 @@ Only `name` is mandatory. All other fields default to empty.
 
 ## Design decisions
 
-- **No conditional compilation for OS detection** -- using `which` at runtime
+- **No conditional compilation for OS detection** - using `which` at runtime
   means the binary is portable and adding a new backend does not require
   platform-specific code
 
-- **Subshell isolation** -- env vars and side effects never leak to the
+- **Subshell isolation** - env vars and side effects never leak to the
   parent shell
 
-- **One result per package install** -- if one package fails, the others
+- **One result per package install** - if one package fails, the others
   still install. Failed packages are logged but do not abort the whole
   activation
 
-- **Module-per-backend** -- each package manager is in its own file.
+- **Module-per-backend** - each package manager is in its own file.
   Adding a new one is a single-file change plus one line in `detect_package_manager()`
 
-- **Executor vs environment separation** -- the executor handles raw command
+- **Executor vs environment separation** - the executor handles raw command
   execution with logging. The environment module handles profile-level
   orchestration. They depend on each other through the `ShellExecutor` interface
 

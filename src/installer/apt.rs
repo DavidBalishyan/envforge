@@ -28,6 +28,37 @@ impl PackageManager for AptManager {
             .collect()
     }
 
+    fn remove(&self, packages: &[String]) -> Vec<Result<(), String>> {
+        packages
+            .iter()
+            .map(|pkg| {
+                log::info!("apt: removing package '{}'", pkg);
+                let status = Command::new("sudo")
+                    .arg("apt-get")
+                    .arg("remove")
+                    .arg("-y")
+                    .arg(pkg)
+                    .status()
+                    .map_err(|e| format!("failed to execute apt-get: {}", e));
+
+                match status {
+                    Ok(s) if s.success() => Ok(()),
+                    Ok(_) => Err(format!("apt-get remove '{}' failed", pkg)),
+                    Err(e) => Err(e),
+                }
+            })
+            .collect()
+    }
+
+    fn is_installed(&self, package: &str) -> bool {
+        Command::new("dpkg")
+            .arg("-s")
+            .arg(package)
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+
     fn name(&self) -> &'static str {
         "apt"
     }

@@ -70,7 +70,7 @@ You will see:
 
 Your shell prompt changes to `(envforge:rust-dev) ` to show you are inside the
 environment. When you are done, type `exit` or press Ctrl-D to return to your
-normal shell.
+normal shell. The installed packages are automatically removed on exit.
 
 ## Export mode (no subshell)
 
@@ -168,8 +168,12 @@ When you run `envforge enter <profile>`:
    and installs each package listed in `packages`
 3. **Run setup** - executes each command in `setup` sequentially via `sh -c`
 4. **Export env vars** - sets each variable from `env` in the shell
-5. **Modify prompt** - prepends `(envforge:<name>) ` to PS1
-6. **Exec subshell** - replaces the current process with your login shell
+5. **Modify prompt** - prepends `(envforge:<name>) ` to PS1 via a shell init file
+   (sources your normal rc, then sets the prompt prefix)
+6. **Spawn subshell** - starts your login shell inside the managed environment
+7. **Register cleanup** - sets an EXIT trap to remove installed packages when
+   the shell exits
 
 All env vars and setup changes are scoped to the subshell. Nothing leaks when
-you exit.
+you exit. The packages installed for the environment are automatically removed
+on exit.

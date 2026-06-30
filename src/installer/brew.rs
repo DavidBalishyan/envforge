@@ -26,6 +26,35 @@ impl PackageManager for BrewManager {
             .collect()
     }
 
+    fn remove(&self, packages: &[String]) -> Vec<Result<(), String>> {
+        packages
+            .iter()
+            .map(|pkg| {
+                log::info!("brew: removing package '{}'", pkg);
+                let status = Command::new("brew")
+                    .arg("remove")
+                    .arg(pkg)
+                    .status()
+                    .map_err(|e| format!("failed to execute brew: {}", e));
+
+                match status {
+                    Ok(s) if s.success() => Ok(()),
+                    Ok(_) => Err(format!("brew remove '{}' failed", pkg)),
+                    Err(e) => Err(e),
+                }
+            })
+            .collect()
+    }
+
+    fn is_installed(&self, package: &str) -> bool {
+        Command::new("brew")
+            .arg("list")
+            .arg(package)
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+
     fn name(&self) -> &'static str {
         "brew"
     }

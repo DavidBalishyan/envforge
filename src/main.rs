@@ -110,16 +110,37 @@ fn cmd_enter(profile: &str, export: bool, executor: &ShellExecutor) -> Result<()
 
     log::info!("loading profile '{}'", config.name);
 
+    let mut installed_packages: Vec<String> = Vec::new();
+
     if !executor.dry_run {
         if !config.packages.is_empty() {
             if let Some(pm) = detect_package_manager() {
                 log::info!("detected package manager: {}", pm.name());
-                log::info!("installing {} package(s)...", config.packages.len());
-                let results = pm.install(&config.packages);
-                for (i, result) in results.iter().enumerate() {
-                    match result {
-                        Ok(()) => log::info!("  ok {}", config.packages[i]),
-                        Err(e) => log::warn!("  fail {}: {}", config.packages[i], e),
+
+                let to_install: Vec<String> = config
+                    .packages
+                    .iter()
+                    .filter(|p| !pm.is_installed(p))
+                    .cloned()
+                    .collect();
+
+                if to_install.is_empty() {
+                    log::info!("all {} package(s) already installed, none to install", config.packages.len());
+                } else {
+                    let skipped = config.packages.len() - to_install.len();
+                    if skipped > 0 {
+                        log::info!("{} package(s) already installed, skipping", skipped);
+                    }
+                    log::info!("installing {} package(s)...", to_install.len());
+                    let results = pm.install(&to_install);
+                    for (i, result) in results.iter().enumerate() {
+                        match result {
+                            Ok(()) => {
+                                log::info!("  ok {}", to_install[i]);
+                                installed_packages.push(to_install[i].clone());
+                            }
+                            Err(e) => log::warn!("  fail {}: {}", to_install[i], e),
+                        }
                     }
                 }
             } else {
@@ -146,7 +167,7 @@ fn cmd_enter(profile: &str, export: bool, executor: &ShellExecutor) -> Result<()
         ActivationMode::Subshell
     };
 
-    activate_environment(&config, mode, executor)
+    activate_environment(&config, mode, executor, &installed_packages)
 }
 
 fn cmd_list() -> Result<()> {
