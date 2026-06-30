@@ -1,4 +1,6 @@
 # envforge
+>[!NOTE]
+>There is an official mirror of this repo on codeberg: <https://codeberg.org/DavidBalishyan/envforge>
 
 Create and manage reproducible development environments from YAML files.
 A lightweight mix of direnv and provisioning tools, but local and simple.
