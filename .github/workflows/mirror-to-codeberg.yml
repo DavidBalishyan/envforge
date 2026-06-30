@@ -24,5 +24,5 @@ jobs:
 
       - name: Mirror push to Codeberg
         run: |
-          git remote add codeberg git@codeberg.org:DavidBalishyan/betterfetch.git
+          git remote add codeberg git@codeberg.org:DavidBalishyan/envforge.git
           git push --mirror codeberg
